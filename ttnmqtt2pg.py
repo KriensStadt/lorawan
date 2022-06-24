@@ -100,7 +100,7 @@ def on_message(c, userdata, msg):
 
 def extract_data(d):
     h = {}
-    h['device_id'] = d['end_device_ids']['device_id']
+    h['device_id'] = d['end_device_ids']['device_id'][:12]
     u = d['uplink_message']
     for i in ('decoded_payload', 'f_port', 'consumed_airtime'):
         h[i] = u[i]
