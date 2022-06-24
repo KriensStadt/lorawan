@@ -119,8 +119,12 @@ def extract_data(d):
     l = s['data_rate']['lora']
     for i in ('bandwidth', 'spreading_factor'):
         h[i] = l[i]
-    g = m['location']
-    for i in ('altitude', 'latitude', 'longitude'):
+
+    #g = m['location']
+    g = u['locations']['frm-payload']
+    #for i in ('altitude', 'latitude', 'longitude'):
+    h['altitude'] = h['decoded_payload']['altitude']
+    for i in ('latitude', 'longitude'):
         h[i] = g[i]
     h['location_src'] = g['source']
     return h
