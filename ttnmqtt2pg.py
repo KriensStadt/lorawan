@@ -157,7 +157,9 @@ def store(d):
     if 'time_od' in d:
         # read only date from 'time' string, add seconds since midnight
         dto = datetime.datetime.strptime(d['time'][0:10], "%Y-%m-%d")
-        timestr = (dto + datetime.timedelta(seconds=d['time_od'])).isoformat() + 'Z'
+        # add .001 just to get decimals in final string
+        dto += datetime.timedelta(seconds=d['time_od'] + 0.001)
+        timestr = dto.isoformat() + 'Z'
     else:
         timestr = d['time']
 
