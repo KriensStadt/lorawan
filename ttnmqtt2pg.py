@@ -132,10 +132,14 @@ def extract_data(d):
     if 'latitude_1' in h['decoded_payload']:
         h['lat1'] = h['decoded_payload']['latitude_1']
         h['lon1'] = h['decoded_payload']['longitude_1']
+    if 'latitude_2' in h['decoded_payload']:
         h['lat2'] = h['decoded_payload']['latitude_2']
         h['lon2'] = h['decoded_payload']['longitude_2']
+    if 'latitude_3' in h['decoded_payload']:
         h['lat3'] = h['decoded_payload']['latitude_3']
         h['lon3'] = h['decoded_payload']['longitude_3']
+    if 'time_od' in h['decoded_payload']:
+        h['time_od'] = h['decoded_payload']['time_od']
 
     return h
 
@@ -150,18 +154,28 @@ def store(d):
     frm_payload = base64.decodebytes(d['frm_payload'].encode('ascii'))
     device_id   = device_id_re.sub(device_repl, d['device_id'])
 
+    # multi-coordinate packet (3 or 4)
     if 'lat1' in d:
-        location1 = f'POINTZ({d["lon1"]} {d["lat1"]} {d["altitude"]})'
-        location2 = f'POINTZ({d["lon2"]} {d["lat2"]} {d["altitude"]})'
-        location3 = f'POINTZ({d["lon3"]} {d["lat3"]} {d["altitude"]})'
         # we ignore the trailing 'Z' here!
         ts = datetime.datetime.strptime(d['time'][0:26], "%Y-%m-%dT%H:%M:%S.%f")
+        location1 = f'POINTZ({d["lon1"]} {d["lat1"]} {d["altitude"]})'
+    else:
+        t0 = d['time']
+    if 'lat2' in d:
+        location2 = f'POINTZ({d["lon2"]} {d["lat2"]} {d["altitude"]})'
+    if 'lat3' in d:
+        location3 = f'POINTZ({d["lon3"]} {d["lat3"]} {d["altitude"]})'
         t0 = (ts - datetime.timedelta(seconds=90)).isoformat() + 'Z'
         t1 = (ts - datetime.timedelta(seconds=60)).isoformat() + 'Z'
         t2 = (ts - datetime.timedelta(seconds=30)).isoformat() + 'Z'
         t3 = d['time']
-    else:
-        t0 = d['time']
+    elif 'lat2' in d:
+        t0 = (ts - datetime.timedelta(seconds=60)).isoformat() + 'Z'
+        t1 = (ts - datetime.timedelta(seconds=30)).isoformat() + 'Z'
+        t2 = d['time']
+    elif 'lat1' in d:
+        t0 = (ts - datetime.timedelta(seconds=30)).isoformat() + 'Z'
+        t1 = d['time']
 
     db.execute(metrics_ins, time=t0,
             device_id=device_id, location=location,
@@ -184,6 +198,7 @@ def store(d):
                 chan_rssi=d['channel_rssi'], f_cnt=d['f_cnt'], f_port=d['f_port'],
                 frm_payload=frm_payload, pl=d['decoded_payload'])
 
+    if 'lat2' in d:
         db.execute(metrics_ins, time=t2,
                 device_id=device_id, location=location2,
                 registry=(d['location_src'] == 'SOURCE_REGISTRY'),
@@ -194,6 +209,7 @@ def store(d):
                 chan_rssi=d['channel_rssi'], f_cnt=d['f_cnt'], f_port=d['f_port'],
                 frm_payload=frm_payload, pl=d['decoded_payload'])
 
+    if 'lat3' in d:
         db.execute(metrics_ins, time=t3,
                 device_id=device_id, location=location3,
                 registry=(d['location_src'] == 'SOURCE_REGISTRY'),
