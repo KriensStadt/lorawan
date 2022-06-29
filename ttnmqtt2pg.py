@@ -154,13 +154,20 @@ def store(d):
     frm_payload = base64.decodebytes(d['frm_payload'].encode('ascii'))
     device_id   = device_id_re.sub(device_repl, d['device_id'])
 
+    if 'time_od' in d:
+        # read only date from 'time' string, add seconds since midnight
+        dto = datetime.datetime.strptime(d['time'][0:10], "%Y-%m-%d")
+        timestr = (dto + datetime.timedelta(seconds=d['time_od'])).isoformat() + 'Z'
+    else:
+        timestr = d['time']
+
     # multi-coordinate packet (3 or 4)
     if 'lat1' in d:
         # we ignore the trailing 'Z' here!
-        ts = datetime.datetime.strptime(d['time'][0:26], "%Y-%m-%dT%H:%M:%S.%f")
+        ts = datetime.datetime.strptime(timestr[0:26], "%Y-%m-%dT%H:%M:%S.%f")
         location1 = f'POINTZ({d["lon1"]} {d["lat1"]} {d["altitude"]})'
     else:
-        t0 = d['time']
+        t0 = timestr
     if 'lat2' in d:
         location2 = f'POINTZ({d["lon2"]} {d["lat2"]} {d["altitude"]})'
     if 'lat3' in d:
@@ -168,14 +175,14 @@ def store(d):
         t0 = (ts - datetime.timedelta(seconds=90)).isoformat() + 'Z'
         t1 = (ts - datetime.timedelta(seconds=60)).isoformat() + 'Z'
         t2 = (ts - datetime.timedelta(seconds=30)).isoformat() + 'Z'
-        t3 = d['time']
+        t3 = timestr
     elif 'lat2' in d:
         t0 = (ts - datetime.timedelta(seconds=60)).isoformat() + 'Z'
         t1 = (ts - datetime.timedelta(seconds=30)).isoformat() + 'Z'
-        t2 = d['time']
+        t2 = timestr
     elif 'lat1' in d:
         t0 = (ts - datetime.timedelta(seconds=30)).isoformat() + 'Z'
-        t1 = d['time']
+        t1 = timestr
 
     db.execute(metrics_ins, time=t0,
             device_id=device_id, location=location,
