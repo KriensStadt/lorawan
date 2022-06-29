@@ -105,8 +105,8 @@ def extract_data(d):
     u = d['uplink_message']
     for i in ('decoded_payload', 'f_port', 'consumed_airtime'):
         h[i] = u[i]
-    for i in ('f_cnt', 'frm_payload', ):
-        h[i] = u.get(i, '')
+    h['f_cnt'] = u.get('f_cnt', 0)
+    h['frm_payload'] = u.get('frm_payload', '')
     # XXX how to deal with multiple receiving gateways?
     m = u['rx_metadata'][0]
     h['gateway_id'] = m['gateway_ids']['gateway_id']
