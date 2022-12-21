@@ -1,3 +1,13 @@
+# Zebrina edition
+
+This is a fork of https://github.com/gsauthof/lorawan
+with support for the custom multi-waypoint packet format used
+in the Zebrina project.
+
+
+Original README follows:
+
+
 This repository contains ttnmqtt2pg, a small script for streaming
 [LoRaWAN][1] uplink message payload (i.e. metrics) into a [PostgreSQL][7]
 database, and an [Ansible][8] playbook for setting everything up (i.e.
